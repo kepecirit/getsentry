@@ -12,6 +12,7 @@ module Sentry
       @configuration = configuration
       @transport_configuration = configuration.transport
       @dsn = configuration.dsn
+      @rate_limits = {}
     end
 
     def send_data(data, options = {})
@@ -24,6 +25,8 @@ module Sentry
         return
       end
 
+      return if is_rate_limited?(event)
+
       encoded_data = prepare_encoded_event(event)
 
       return nil unless encoded_data
@@ -31,6 +34,26 @@ module Sentry
       send_data(encoded_data)
 
       event
+    end
+
+    def is_rate_limited?(event)
+      event_hash = event.to_hash
+      event_type = event_hash[:type] || event_hash['type']
+
+      # check category-specific limit
+      delay =
+        case event_type
+        when "event"
+          # confusing mapping, but it's decided by Sentry
+          @rate_limits["error"]
+        when "transaction"
+          @rate_limits["transaction"]
+        end
+
+      # check universal limit if not category limit
+      delay ||= @rate_limits[nil]
+
+      !!delay && delay > Time.now
     end
 
     def generate_auth_header
