@@ -7,6 +7,7 @@ module Sentry
     USER_AGENT = "sentry-ruby/#{Sentry::VERSION}"
 
     attr_accessor :configuration
+    attr_reader :rate_limits
 
     def initialize(configuration)
       @configuration = configuration
@@ -20,12 +21,24 @@ module Sentry
     end
 
     def send_event(event)
+      event_hash = event.to_hash
+      event_type = event_hash[:type] || event_hash['type']
+
       unless configuration.sending_allowed?
-        configuration.logger.debug(LOGGER_PROGNAME) { "Event not sent: #{configuration.error_messages}" }
+        configuration.logger.debug(LOGGER_PROGNAME) do
+          "#{event_type.capitalize} not sent: #{configuration.error_messages}"
+        end
+
         return
       end
 
-      return if is_rate_limited?(event)
+      if is_rate_limited?(event_type)
+        configuration.logger.info(LOGGER_PROGNAME) do
+          "#{event_type.capitalize} not sent because of rate limiting"
+        end
+
+        return
+      end
 
       encoded_data = prepare_encoded_event(event)
 
@@ -36,10 +49,7 @@ module Sentry
       event
     end
 
-    def is_rate_limited?(event)
-      event_hash = event.to_hash
-      event_type = event_hash[:type] || event_hash['type']
-
+    def is_rate_limited?(event_type)
       # check category-specific limit
       delay =
         case event_type
