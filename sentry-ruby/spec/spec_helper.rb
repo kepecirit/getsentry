@@ -2,6 +2,7 @@ require "bundler/setup"
 require "pry"
 require "timecop"
 require 'simplecov'
+require 'rspec/retry'
 
 SimpleCov.start do
   project_name "sentry-ruby"

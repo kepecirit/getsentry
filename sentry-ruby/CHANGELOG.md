@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add Sentry.set_context helper [#1337](https://github.com/getsentry/sentry-ruby/pull/1337)
+- Fix handle the case where the logger messages is not of String type [#1341](https://github.com/getsentry/sentry-ruby/pull/1341)
+
 ## 4.3.0
 
 ### Features
