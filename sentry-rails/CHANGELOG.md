@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Minimize sentry-rails' dependency requirement [#1352](https://github.com/getsentry/sentry-ruby/pull/1352)
+
 ## 4.3.1
 
 - Only apply background worker patch if ActiveRecord is loaded [#1350](https://github.com/getsentry/sentry-ruby/pull/1350)
